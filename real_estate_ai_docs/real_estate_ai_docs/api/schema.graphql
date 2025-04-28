@@ -1,0 +1,546 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Query {
+  # Authentication
+  me: User!
+
+  # Chat
+  chatSession(id: ID!): ChatSession
+  chatSessions(limit: Int = 10, offset: Int = 0): [ChatSession!]!
+  chatMessages(sessionId: ID!, limit: Int = 20, offset: Int = 0): [ChatMessage!]!
+
+  # Analytics
+  propertyValuation(propertyId: ID!): ValuationResult
+  investmentAnalysis(
+    propertyId: ID!
+    investmentPeriod: Int = 5
+    financingPercentage: Float = 0
+  ): InvestmentAnalysis
+  visaEligibility(propertyId: ID!): VisaEligibility
+
+  # Proposals
+  proposal(id: ID!): Proposal
+  proposals(
+    leadId: ID
+    status: ProposalStatus
+    limit: Int = 10
+    offset: Int = 0
+  ): [Proposal!]!
+
+  # CRM
+  lead(id: ID!): Lead
+  leads(
+    status: LeadStatus
+    source: LeadSource
+    assignedTo: ID
+    limit: Int = 20
+    offset: Int = 0
+  ): LeadConnection!
+
+  # Properties
+  property(id: ID!): Property
+  properties(
+    type: PropertyType
+    status: PropertyStatus
+    category: PropertyCategory
+    minPrice: Float
+    maxPrice: Float
+    bedrooms: Int
+    location: String
+    limit: Int = 20
+    offset: Int = 0
+  ): PropertyConnection!
+  searchProperties(
+    query: String!
+    filters: PropertySearchFilters
+    limit: Int = 10
+  ): [Property!]!
+
+  # External Data
+  dldTransactions(
+    startDate: Date
+    endDate: Date
+    area: String
+    propertyType: String
+    limit: Int = 20
+    offset: Int = 0
+  ): DldTransactionConnection!
+}
+
+type Mutation {
+  # Authentication
+  login(email: String!, password: String!): AuthPayload!
+  refreshToken: AuthPayload!
+
+  # Chat
+  sendChatMessage(
+    message: String!
+    sessionId: ID
+    language: Language = AUTO
+  ): ChatMessage!
+  createChatSession: ChatSession!
+
+  # Proposals
+  generateProposal(input: ProposalInput!): Proposal!
+  updateProposal(id: ID!, input: ProposalUpdateInput!): Proposal!
+  deleteProposal(id: ID!): Boolean!
+
+  # CRM
+  createLead(input: LeadInput!): Lead!
+  updateLead(id: ID!, input: LeadInput!): Lead!
+  deleteLead(id: ID!): Boolean!
+  assignLead(id: ID!, userId: ID!): Lead!
+  addLeadNote(leadId: ID!, content: String!): Lead!
+
+  # Properties
+  createProperty(input: PropertyInput!): Property!
+  updateProperty(id: ID!, input: PropertyInput!): Property!
+  deleteProperty(id: ID!): Boolean!
+  uploadPropertyImage(propertyId: ID!, image: Upload!): Property!
+  removePropertyImage(propertyId: ID!, imageUrl: String!): Property!
+
+  # External Data Sync
+  syncBayutLeads: SyncResult!
+  syncPropertyFinderLeads: SyncResult!
+}
+
+type Subscription {
+  chatMessageAdded(sessionId: ID!): ChatMessage!
+  leadAdded: Lead!
+  leadUpdated(id: ID): Lead!
+  proposalGenerated(leadId: ID): Proposal!
+}
+
+# Authentication Types
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type User {
+  id: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  fullName: String!
+  role: UserRole!
+  agency: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+  MANAGER
+  ANALYST
+}
+
+# Chat Types
+type ChatSession {
+  id: ID!
+  userId: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastMessageAt: DateTime
+  messages(limit: Int = 20, offset: Int = 0): [ChatMessage!]!
+}
+
+type ChatMessage {
+  id: ID!
+  sessionId: ID!
+  role: ChatRole!
+  content: String!
+  language: Language!
+  timestamp: DateTime!
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+enum Language {
+  EN
+  AR
+  FR
+  AUTO
+}
+
+# Analytics Types
+type ValuationResult {
+  propertyId: ID!
+  estimatedValue: Float!
+  valueRange: ValueRange!
+  comparableProperties: [ComparableProperty!]!
+  marketTrends: MarketTrends!
+  confidence: Float!
+}
+
+type ValueRange {
+  min: Float!
+  max: Float!
+}
+
+type ComparableProperty {
+  id: ID!
+  title: String!
+  price: Float!
+  area: Float!
+  bedrooms: Int!
+  bathrooms: Int!
+  similarityScore: Float!
+  transactionDate: Date!
+}
+
+type MarketTrends {
+  annualGrowth: Float!
+  quarterlyGrowth: Float!
+  forecastGrowth: Float!
+}
+
+type InvestmentAnalysis {
+  propertyId: ID!
+  purchasePrice: Float!
+  estimatedRentalYield: Float!
+  netYield: Float!
+  leveragedIRR: Float!
+  unleveragedIRR: Float!
+  breakEvenPoint: Float!
+  cashFlowAnalysis: [CashFlowYear!]!
+  financingOptions: [FinancingOption!]!
+}
+
+type CashFlowYear {
+  year: Int!
+  rentalIncome: Float!
+  expenses: Float!
+  cashFlow: Float!
+  cumulativeCashFlow: Float!
+}
+
+type FinancingOption {
+  bank: String!
+  interestRate: Float!
+  term: Int!
+  maxLTV: Float!
+  monthlyPayment: Float!
+}
+
+type VisaEligibility {
+  propertyId: ID!
+  propertyValue: Float!
+  eligibleFor: [VisaOption!]!
+}
+
+type VisaOption {
+  visaType: VisaType!
+  eligible: Boolean!
+  requirements: [String!]!
+  additionalCriteria: [String!]!
+}
+
+enum VisaType {
+  GOLDEN_VISA_10YR
+  GOLDEN_VISA_5YR
+  RETIREMENT_VISA
+  INVESTOR_VISA
+}
+
+# Proposal Types
+type Proposal {
+  id: ID!
+  propertyId: ID!
+  property: Property!
+  leadId: ID!
+  lead: Lead!
+  title: String!
+  createdAt: DateTime!
+  createdBy: ID!
+  creator: User!
+  language: Language!
+  status: ProposalStatus!
+  pdfUrl: String!
+  webUrl: String!
+  sections: [ProposalSection!]!
+}
+
+type ProposalSection {
+  title: String!
+  content: String!
+  type: ProposalSectionType!
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+}
+
+enum ProposalSectionType {
+  PROPERTY_DETAILS
+  FINANCIAL_ANALYSIS
+  LOCATION_INSIGHTS
+  PAYMENT_PLAN
+  VISA_INFORMATION
+}
+
+input ProposalInput {
+  propertyId: ID!
+  leadId: ID!
+  includeFinancing: Boolean = true
+  includeVisaInfo: Boolean = true
+  language: Language = EN
+}
+
+input ProposalUpdateInput {
+  title: String
+  status: ProposalStatus
+  sections: [ProposalSectionInput!]
+}
+
+input ProposalSectionInput {
+  title: String!
+  content: String!
+  type: ProposalSectionType!
+}
+
+# CRM Types
+type Lead {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  fullName: String!
+  email: String!
+  phone: String
+  nationality: String
+  status: LeadStatus!
+  source: LeadSource!
+  assignedTo: ID
+  assignedAgent: User
+  budget: Budget
+  requirements: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastContactedAt: DateTime
+  notes: [LeadNote!]!
+  proposals: [Proposal!]!
+}
+
+type LeadNote {
+  content: String!
+  createdAt: DateTime!
+  createdBy: ID!
+  creator: User!
+}
+
+type Budget {
+  min: Float
+  max: Float
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED
+  LOST
+}
+
+enum LeadSource {
+  WEBSITE
+  BAYUT
+  PROPERTY_FINDER
+  REFERRAL
+  DIRECT
+  OTHER
+}
+
+input LeadInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String
+  nationality: String
+  status: LeadStatus = NEW
+  source: LeadSource
+  assignedTo: ID
+  budget: BudgetInput
+  requirements: String
+  notes: String
+}
+
+input BudgetInput {
+  min: Float
+  max: Float
+}
+
+type LeadConnection {
+  edges: [Lead!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+# Property Types
+type Property {
+  id: ID!
+  reference: String!
+  title: String!
+  description: String!
+  type: PropertyType!
+  status: PropertyStatus!
+  category: PropertyCategory!
+  price: Float!
+  area: Float!
+  bedrooms: Int
+  bathrooms: Int
+  location: Location!
+  features: [String!]!
+  amenities: [String!]!
+  images: [String!]!
+  floorPlan: String
+  developer: String
+  completionDate: Date
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  valuation: ValuationResult
+  investmentAnalysis(
+    investmentPeriod: Int = 5
+    financingPercentage: Float = 0
+  ): InvestmentAnalysis
+  visaEligibility: VisaEligibility
+}
+
+type Location {
+  address: String!
+  community: String!
+  city: String!
+  coordinates: Coordinates
+}
+
+type Coordinates {
+  latitude: Float!
+  longitude: Float!
+}
+
+enum PropertyType {
+  APARTMENT
+  VILLA
+  TOWNHOUSE
+  PENTHOUSE
+  OFFICE
+  RETAIL
+  LAND
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  SOLD
+  RENTED
+  OFF_PLAN
+}
+
+enum PropertyCategory {
+  SALE
+  RENT
+  OFF_PLAN
+}
+
+input PropertyInput {
+  reference: String
+  title: String!
+  description: String!
+  type: PropertyType!
+  status: PropertyStatus!
+  category: PropertyCategory!
+  price: Float!
+  area: Float!
+  bedrooms: Int
+  bathrooms: Int
+  location: LocationInput!
+  features: [String!]
+  amenities: [String!]
+  images: [String!]
+  floorPlan: String
+  developer: String
+  completionDate: Date
+}
+
+input LocationInput {
+  address: String!
+  community: String!
+  city: String!
+  coordinates: CoordinatesInput
+}
+
+input CoordinatesInput {
+  latitude: Float!
+  longitude: Float!
+}
+
+input PropertySearchFilters {
+  minPrice: Float
+  maxPrice: Float
+  bedrooms: Int
+  propertyType: PropertyType
+  location: String
+}
+
+type PropertyConnection {
+  edges: [Property!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+# External Data Types
+type DldTransaction {
+  id: ID!
+  transactionDate: Date!
+  transactionType: DldTransactionType!
+  propertyType: String!
+  area: String!
+  price: Float!
+  size: Float!
+  registrationNumber: String!
+}
+
+enum DldTransactionType {
+  SALE
+  MORTGAGE
+  GIFT
+  INHERITANCE
+}
+
+type DldTransactionConnection {
+  edges: [DldTransaction!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+# Sync Types
+type SyncResult {
+  syncedItems: Int!
+  newItems: Int!
+  updatedItems: Int!
+}
+
+# Pagination Types
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Scalar Types
+scalar DateTime
+scalar Date
+scalar Upload

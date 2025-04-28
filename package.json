@@ -1,0 +1,24 @@
+{
+  "name": "uae-real-estate-ai-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for UAE Real-Estate AI Operating System",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "build": "tsc",
+    "test": "node ../scripts/test-mcp-server.js"
+  },
+  "keywords": [
+    "mcp",
+    "windsurf",
+    "real-estate",
+    "ai"
+  ],
+  "author": "UAE Real-Estate AI Team",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^18.15.11",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
+}

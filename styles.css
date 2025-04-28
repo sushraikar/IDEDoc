@@ -1,0 +1,246 @@
+/* Custom styles for UAE Real-Estate AI Platform */
+
+/* Base styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Code blocks */
+pre {
+  background-color: #1e1e3f;
+  color: #fff;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+code {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Inline code */
+:not(pre) > code {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Diagram viewer */
+.diagram-container {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  overflow: auto;
+}
+
+.diagram-container img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Zoom controls for diagrams */
+.diagram-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.diagram-controls button {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0 0.25rem;
+  cursor: pointer;
+}
+
+.diagram-controls button:hover {
+  background-color: #e2e8f0;
+}
+
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+table tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Callouts and notes */
+.callout {
+  border-left: 4px solid;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  border-radius: 0.25rem;
+}
+
+.callout.info {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.callout.warning {
+  background-color: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.callout.error {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+}
+
+.callout.success {
+  background-color: #f0fdf4;
+  border-color: #22c55e;
+}
+
+/* Tabs */
+.tabs {
+  margin: 1.5rem 0;
+}
+
+.tab-buttons {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.tab-button.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.tab-content {
+  padding: 1rem 0;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab-buttons {
+    flex-wrap: wrap;
+  }
+  
+  .tab-button {
+    flex: 1 0 auto;
+    text-align: center;
+    padding: 0.5rem;
+  }
+  
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* Print styles */
+@media print {
+  header, footer, aside, .diagram-controls, .tab-buttons {
+    display: none;
+  }
+  
+  main {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .tab-panel {
+    display: block;
+  }
+  
+  a::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a2e;
+    color: #e2e8f0;
+  }
+  
+  .bg-white {
+    background-color: #0f172a !important;
+  }
+  
+  .bg-gray-50 {
+    background-color: #1e293b !important;
+  }
+  
+  .text-gray-900 {
+    color: #f8fafc !important;
+  }
+  
+  .text-gray-600 {
+    color: #cbd5e1 !important;
+  }
+  
+  .border-gray-200 {
+    border-color: #334155 !important;
+  }
+  
+  .hover\:bg-gray-100:hover {
+    background-color: #334155 !important;
+  }
+  
+  table th {
+    background-color: #1e293b;
+  }
+  
+  table td {
+    border-bottom-color: #334155;
+  }
+  
+  table tr:hover {
+    background-color: #1e293b;
+  }
+  
+  :not(pre) > code {
+    background-color: #334155;
+    color: #e2e8f0;
+  }
+}

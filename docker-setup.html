@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Setup - UAE Real-Estate AI Platform</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/dockerfile.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/bash.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">UAE Real-Estate AI Platform</a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/index.html">Documentation</a></li>
+                    <li><a href="index.html" class="active">IDE Package</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>IDE Package</h3>
+            <ul>
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="setup-guide.html">Local Setup</a></li>
+                <li><a href="docker-setup.html" class="active">Docker Setup</a></li>
+                <li><a href="flow-snippets.html">Flow Snippets</a></li>
+                <li><a href="mcp-server.html">MCP Server</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="validation-tools.html">Validation Tools</a></li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <div class="breadcrumbs">
+                <a href="../index.html">Home</a> &gt; 
+                <a href="index.html">IDE Package</a> &gt; 
+                <span>Docker Setup</span>
+            </div>
+
+            <h1>Docker Setup Guide</h1>
+            
+            <p>This guide provides step-by-step instructions for setting up the UAE Real-Estate AI Platform in a Docker environment. Using Docker containers ensures consistent behavior across different systems and simplifies the setup process.</p>
+
+            <div class="card">
+                <h2>Prerequisites</h2>
+                <p>Before you begin, ensure you have the following installed on your system:</p>
+                <ul>
+                    <li><a href="https://docs.docker.com/engine/install/" target="_blank">Docker Engine</a> (version 20.10.0 or later)</li>
+                    <li><a href="https://docs.docker.com/compose/install/" target="_blank">Docker Compose</a> (version 2.0.0 or later)</li>
+                    <li><a href="https://git-scm.com/downloads" target="_blank">Git</a> (version 2.30.0 or later)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Installation Steps</h2>
+                
+                <h3>1. Clone the Repository</h3>
+                <pre><code class="language-bash">git clone https://github.com/uae-realestate-ai/windsurf-ide-package.git
+cd windsurf-ide-package</code></pre>
+
+                <h3>2. Configure Environment Variables</h3>
+                <p>Create a <code>.env</code> file in the root directory with the following variables:</p>
+                <pre><code class="language-bash"># MCP Server Configuration
+MCP_SERVER_PORT=3000
+
+# Database Configuration
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=vectordb
+POSTGRES_PORT=5432
+
+# API Keys
+BAYUT_API_KEY=your_bayut_api_key
+PROPERTY_FINDER_API_KEY=your_property_finder_api_key
+DLD_API_KEY=your_dld_api_key
+OPENAI_API_KEY=your_openai_api_key
+
+# Langfuse Configuration (Optional)
+LANGFUSE_PUBLIC_KEY=your_langfuse_public_key
+LANGFUSE_SECRET_KEY=your_langfuse_secret_key
+LANGFUSE_HOST=https://cloud.langfuse.com</code></pre>
+                <p>Replace the placeholder API keys with your actual keys.</p>
+
+                <h3>3. Start the Docker Containers</h3>
+                <p>Run the following command to start all the required services:</p>
+                <pre><code class="language-bash">docker-compose up -d</code></pre>
+                <p>This command will:</p>
+                <ul>
+                    <li>Build and start the MCP server container</li>
+                    <li>Start a PostgreSQL container with pgvector extension</li>
+                    <li>Initialize the database with required schemas</li>
+                    <li>Set up networking between containers</li>
+                </ul>
+
+                <h3>4. Verify the Installation</h3>
+                <p>Check if all containers are running properly:</p>
+                <pre><code class="language-bash">docker-compose ps</code></pre>
+                <p>You should see all services in the "Up" state.</p>
+                <p>Test the MCP server connection:</p>
+                <pre><code class="language-bash">curl http://localhost:3000/health</code></pre>
+                <p>You should receive a response like:</p>
+                <pre><code class="language-json">{"status":"ok"}</code></pre>
+
+                <h3>5. Configure Windsurf Editor</h3>
+                <ol>
+                    <li>Open the Windsurf Editor application</li>
+                    <li>Go to Settings > MCP Servers</li>
+                    <li>Add a new MCP server with the following details:
+                        <ul>
+                            <li>Name: UAE Real-Estate AI</li>
+                            <li>URL: http://localhost:3000</li>
+                            <li>Authentication: None (or Bearer Token if you've configured authentication)</li>
+                        </ul>
+                    </li>
+                    <li>Click "Test Connection" to verify the connection is successful</li>
+                    <li>Click "Save" to add the MCP server</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h2>Container Architecture</h2>
+                <p>The Docker setup includes the following containers:</p>
+                <div class="diagram">
+                    <img src="../images/docker-architecture.png" alt="Docker Architecture Diagram">
+                </div>
+                <h3>1. MCP Server</h3>
+                <p>Node.js application that provides the Model Context Protocol server:</p>
+                <ul>
+                    <li>Exposes port 3000 for API access</li>
+                    <li>Contains all the tools for property search, analysis, market insights, proposal generation, and translation</li>
+                </ul>
+
+                <h3>2. PostgreSQL Database</h3>
+                <p>Database with pgvector extension for vector similarity search:</p>
+                <ul>
+                    <li>Stores property embeddings and metadata</li>
+                    <li>Provides vector search capabilities for property matching</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Data Persistence</h2>
+                <p>The Docker setup uses volumes to ensure data persistence:</p>
+                <ul>
+                    <li><code>postgres-data</code>: Stores PostgreSQL database files</li>
+                    <li><code>mcp-server-logs</code>: Stores MCP server logs</li>
+                </ul>
+                <p>These volumes ensure that your data is preserved even if the containers are stopped or removed.</p>
+            </div>
+
+            <div class="card">
+                <h2>Managing Docker Containers</h2>
+                
+                <h3>Stopping the Services</h3>
+                <p>To stop all services while preserving data:</p>
+                <pre><code class="language-bash">docker-compose down</code></pre>
+                <p>To stop all services and remove all data:</p>
+                <pre><code class="language-bash">docker-compose down -v</code></pre>
+
+                <h3>Updating the Services</h3>
+                <p>To update to the latest version:</p>
+                <pre><code class="language-bash">git pull
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d</code></pre>
+
+                <h3>Viewing Logs</h3>
+                <p>To view logs from the MCP server:</p>
+                <pre><code class="language-bash">docker-compose logs -f mcp-server</code></pre>
+                <p>To view logs from the PostgreSQL database:</p>
+                <pre><code class="language-bash">docker-compose logs -f postgres</code></pre>
+            </div>
+
+            <div class="card">
+                <h2>Resource Requirements</h2>
+                <p>The Docker containers require the following minimum resources:</p>
+                <ul>
+                    <li>CPU: 2 cores</li>
+                    <li>RAM: 4GB</li>
+                    <li>Disk: 10GB</li>
+                </ul>
+                <p>For optimal performance, we recommend:</p>
+                <ul>
+                    <li>CPU: 4 cores</li>
+                    <li>RAM: 8GB</li>
+                    <li>Disk: 20GB</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Security Considerations</h2>
+                <p>The default setup is configured for local development. For production use, consider the following security enhancements:</p>
+                <ol>
+                    <li>Enable authentication for the MCP server</li>
+                    <li>Use Docker Secrets for managing sensitive information</li>
+                    <li>Configure TLS for encrypted communication</li>
+                    <li>Implement network isolation with Docker networks</li>
+                    <li>Regularly update container images to include security patches</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h2>Validation Tools</h2>
+                <p>The IDE package includes validation tools to help you verify your Docker setup:</p>
+                <pre><code class="language-bash">node scripts/validate-docker-environment.js</code></pre>
+                <p>This script checks:</p>
+                <ul>
+                    <li>Docker installation and configuration</li>
+                    <li>Container status and health</li>
+                    <li>Network configuration</li>
+                    <li>Volume setup</li>
+                    <li>Database connection and extensions</li>
+                    <li>Environment variables</li>
+                </ul>
+                <p>For more detailed troubleshooting, refer to the <a href="troubleshooting.html">Troubleshooting Guide</a>.</p>
+            </div>
+
+            <div class="card">
+                <h2>Next Steps</h2>
+                <p>After completing the Docker setup, proceed to the <a href="flow-snippets.html">Flow Snippets</a> section to learn how to use the UAE Real-Estate AI Platform with the Windsurf Editor.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 UAE Real-Estate AI Platform. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

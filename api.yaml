@@ -1,0 +1,553 @@
+openapi: 3.0.3
+info:
+  title: Real Estate AI Operating System API
+  description: |
+    API specification for the Real Estate AI Operating System, a comprehensive SaaS platform 
+    designed for UAE real estate agencies. This API provides access to chatbot services, 
+    analytics, proposal generation, CRM functionality, and integration with external data sources.
+  version: 1.0.0
+  contact:
+    name: Real Estate AI Support
+    email: support@realestate-ai.ae
+    url: https://realestate-ai.ae/support
+  license:
+    name: Proprietary
+    url: https://realestate-ai.ae/license
+
+servers:
+  - url: https://api.realestate-ai.ae/v1
+    description: Production server
+  - url: https://staging-api.realestate-ai.ae/v1
+    description: Staging server
+  - url: https://dev-api.realestate-ai.ae/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Chat
+    description: Multilingual chatbot interaction endpoints
+  - name: Analytics
+    description: Property and investment analytics endpoints
+  - name: Proposals
+    description: Proposal generation and management endpoints
+  - name: CRM
+    description: Customer relationship management endpoints
+  - name: Properties
+    description: Property management endpoints
+  - name: Users
+    description: User management endpoints
+  - name: External
+    description: External API integration endpoints
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate a user and return a JWT token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: agent@realestate.ae
+                password:
+                  type: string
+                  format: password
+                  example: securePassword123
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for authentication
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh token
+      description: Refresh an expired JWT token
+      operationId: refreshToken
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: New JWT token
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /chat:
+    post:
+      tags:
+        - Chat
+      summary: Send message to chatbot
+      description: Send a message to the multilingual chatbot and receive a response
+      operationId: sendChatMessage
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: User message
+                  example: "What are the current market trends for 2-bedroom apartments in Downtown Dubai?"
+                sessionId:
+                  type: string
+                  description: Session ID for continuing a conversation
+                  example: "session-123456"
+                language:
+                  type: string
+                  description: Preferred language (defaults to auto-detect)
+                  enum: [en, ar, fr, auto]
+                  default: auto
+                  example: "en"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: Chatbot response
+                  sessionId:
+                    type: string
+                    description: Session ID for continuing the conversation
+                  detectedLanguage:
+                    type: string
+                    description: Detected language of the user message
+                  suggestedActions:
+                    type: array
+                    description: Suggested follow-up actions
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum: [message, link, property]
+                        text:
+                          type: string
+                        value:
+                          type: string
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /chat/stream:
+    post:
+      tags:
+        - Chat
+      summary: Stream chat response
+      description: Send a message to the chatbot and receive a streamed response
+      operationId: streamChatResponse
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: User message
+                sessionId:
+                  type: string
+                  description: Session ID for continuing a conversation
+                language:
+                  type: string
+                  description: Preferred language
+                  enum: [en, ar, fr, auto]
+                  default: auto
+      responses:
+        '200':
+          description: Successful streaming response
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events stream with response chunks
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /chat/history/{sessionId}:
+    get:
+      tags:
+        - Chat
+      summary: Get chat history
+      description: Retrieve the chat history for a specific session
+      operationId: getChatHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval of chat history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatMessage'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analytics/valuation/{propertyId}:
+    get:
+      tags:
+        - Analytics
+      summary: Property valuation
+      description: Get valuation analysis for a specific property
+      operationId: getPropertyValuation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          description: Property ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful valuation analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValuationResult'
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analytics/investment/{propertyId}:
+    get:
+      tags:
+        - Analytics
+      summary: Investment analysis
+      description: Get investment analysis for a specific property
+      operationId: getInvestmentAnalysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          description: Property ID
+          schema:
+            type: string
+        - name: investmentPeriod
+          in: query
+          required: false
+          description: Investment period in years
+          schema:
+            type: integer
+            default: 5
+        - name: financingPercentage
+          in: query
+          required: false
+          description: Financing percentage (0-100)
+          schema:
+            type: number
+            default: 0
+      responses:
+        '200':
+          description: Successful investment analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestmentAnalysis'
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analytics/visa-eligibility/{propertyId}:
+    get:
+      tags:
+        - Analytics
+      summary: Visa eligibility check
+      description: Check visa eligibility based on property investment
+      operationId: checkVisaEligibility
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          description: Property ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful visa eligibility check
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisaEligibility'
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /proposals:
+    post:
+      tags:
+        - Proposals
+      summary: Generate proposal
+      description: Generate a new property proposal
+      operationId: generateProposal
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - propertyId
+                - leadId
+              properties:
+                propertyId:
+                  type: string
+                  description: Property ID
+                leadId:
+                  type: string
+                  description: Lead ID
+                includeFinancing:
+                  type: boolean
+                  description: Include financing options
+                  default: true
+                includeVisaInfo:
+                  type: boolean
+                  description: Include visa information
+                  default: true
+                language:
+                  type: string
+                  description: Proposal language
+                  enum: [en, ar, fr]
+                  default: en
+      responses:
+        '201':
+          description: Proposal generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /proposals/{proposalId}:
+    get:
+      tags:
+        - Proposals
+      summary: Get proposal
+      description: Retrieve a specific proposal
+      operationId: getProposal
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: proposalId
+          in: path
+          required: true
+          description: Proposal ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval of proposal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+        '404':
+          description: Proposal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /proposals/{proposalId}/pdf:
+    get:
+      tags:
+        - Proposals
+      summary: Get proposal PDF
+      description: Generate and download a PDF version of the proposal
+      operationId: getProposalPdf
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: proposalId
+          in: path
+          required: true
+          description: Proposal ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Proposal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /crm/leads:
+    get:
+      tags:
+        - CRM
+      summary: Get leads
+      description: Retrieve a list of leads
+      operationId: getLeads
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          required: false
+          description: Lead status filter
+          schema:
+            type: string
+            enum: [new, contacted, qualified, proposal, negotiation, closed, lost]
+      responses:
+        '200':
+          description: Successful retrieval of leads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lead'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    post:
+      tags:
+        - CRM
+      summary: Create lead
+      description: Create a new lead
+      operationId: createLead
+      s
+(Content truncated due to size limit. Use line ranges to read in chunks)

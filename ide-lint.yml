@@ -1,0 +1,194 @@
+name: IDE Lint and Validation
+
+on:
+  push:
+    paths:
+      - 'ide/**'
+  pull_request:
+    paths:
+      - 'ide/**'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate IDE Components
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          cd ide/mcp_server
+          npm install
+      
+      - name: Lint TypeScript
+        run: |
+          cd ide/mcp_server
+          npm install -g typescript ts-node
+          tsc --noEmit
+      
+      - name: Validate Flow JSON
+        run: |
+          cd ide
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Read the windsurf_flows.md file
+            const flowsFile = fs.readFileSync('windsurf_flows.md', 'utf8');
+            
+            // Extract JSON snippets
+            const jsonRegex = /\`\`\`json\n([\s\S]*?)\n\`\`\`/g;
+            let match;
+            let validFlows = 0;
+            let invalidFlows = 0;
+            
+            while ((match = jsonRegex.exec(flowsFile)) !== null) {
+              try {
+                const jsonContent = match[1];
+                const parsed = JSON.parse(jsonContent);
+                
+                // Validate flow structure
+                if (!parsed.name || !parsed.description || !parsed.uid || !Array.isArray(parsed.actions)) {
+                  console.error('Invalid flow structure:', parsed.name || 'Unnamed flow');
+                  invalidFlows++;
+                  continue;
+                }
+                
+                // Validate actions
+                for (const action of parsed.actions) {
+                  if (!action.type) {
+                    console.error('Action missing type in flow:', parsed.name);
+                    invalidFlows++;
+                    continue;
+                  }
+                }
+                
+                console.log('Valid flow:', parsed.name);
+                validFlows++;
+              } catch (error) {
+                console.error('JSON parsing error:', error.message);
+                invalidFlows++;
+              }
+            }
+            
+            console.log(\`Validation complete: \${validFlows} valid flows, \${invalidFlows} invalid flows\`);
+            
+            if (invalidFlows > 0) {
+              process.exit(1);
+            }
+          "
+      
+      - name: Check MCP Server
+        run: |
+          cd ide/mcp_server
+          ts-node -e "
+            // Simple validation of MCP server structure
+            const fs = require('fs');
+            const path = require('path');
+            
+            const indexFile = fs.readFileSync('index.ts', 'utf8');
+            
+            // Check for required components
+            const checks = [
+              { pattern: /class.*implements MCPServer/, message: 'MCP Server class implementation' },
+              { pattern: /interface MCPTool/, message: 'MCPTool interface' },
+              { pattern: /start\(\): void/, message: 'start() method' },
+              { pattern: /handleListTools/, message: 'handleListTools method' },
+              { pattern: /handleExecuteTool/, message: 'handleExecuteTool method' }
+            ];
+            
+            let missingComponents = [];
+            
+            for (const check of checks) {
+              if (!check.pattern.test(indexFile)) {
+                missingComponents.push(check.message);
+              }
+            }
+            
+            if (missingComponents.length > 0) {
+              console.error('MCP Server is missing required components:');
+              missingComponents.forEach(component => console.error(` - ${component}`));
+              process.exit(1);
+            }
+            
+            console.log('MCP Server structure validation passed');
+            
+            // Count number of tools
+            const toolClassRegex = /class\s+(\w+)\s+implements\s+MCPTool/g;
+            let toolMatch;
+            let toolCount = 0;
+            
+            while ((toolMatch = toolClassRegex.exec(indexFile)) !== null) {
+              toolCount++;
+              console.log(` - Found tool: ${toolMatch[1]}`);
+            }
+            
+            console.log(`Total tools found: ${toolCount}`);
+            
+            if (toolCount < 3) {
+              console.error('MCP Server should have at least 3 tools');
+              process.exit(1);
+            }
+          "
+      
+      - name: Validate Documentation
+        run: |
+          cd ide
+          node -e "
+            const fs = require('fs');
+            
+            // Check required files
+            const requiredFiles = [
+              'setup.md',
+              'windsurf_flows.md',
+              'troubleshooting.md',
+              'mcp_server/index.ts'
+            ];
+            
+            const missingFiles = [];
+            
+            for (const file of requiredFiles) {
+              if (!fs.existsSync(file)) {
+                missingFiles.push(file);
+              }
+            }
+            
+            if (missingFiles.length > 0) {
+              console.error('Missing required files:');
+              missingFiles.forEach(file => console.error(` - ${file}`));
+              process.exit(1);
+            }
+            
+            // Check content length
+            const minLengths = {
+              'setup.md': 2000,
+              'windsurf_flows.md': 5000,
+              'troubleshooting.md': 2000
+            };
+            
+            const insufficientFiles = [];
+            
+            for (const [file, minLength] of Object.entries(minLengths)) {
+              const content = fs.readFileSync(file, 'utf8');
+              if (content.length < minLength) {
+                insufficientFiles.push(`${file} (${content.length} < ${minLength})`);
+              }
+            }
+            
+            if (insufficientFiles.length > 0) {
+              console.error('Files with insufficient content:');
+              insufficientFiles.forEach(file => console.error(` - ${file}`));
+              process.exit(1);
+            }
+            
+            console.log('Documentation validation passed');
+          "

@@ -1,0 +1,68 @@
+You are Manus AI — an autonomous technical writer, solution-architect, and DevOps SRE in one.  
+Your task: **produce a fully-fledged documentation bundle** for an AI-powered SaaS platform
+that serves UAE real-estate agencies.
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│  0.  CONTEXT                                                                │
+╰─────────────────────────────────────────────────────────────────────────────╯
+ • Product = “Real-Estate AI Operating System”  
+   – Multilingual chatbot (EN/AR/FR) built with LangChain + LangGraph  
+   – Investor analytics (valuation, net-yield, leveraged IRR, visa flags)  
+   – One-click proposal generator (PDF + web)  
+   – Unified CRM, task automation, Bayut / Property Finder / DLD connectors  
+   – Hosted on AWS me-central-1 (EKS, RDS Postgres 15 + pgvector, S3, Redis)  
+   – Observability with Langfuse, Prometheus, Grafana  
+   – Security: JWT RS256, RBAC (Casbin), PDPL-compliant, TLS 1.3, KMS-encrypted  
+   – Competitive gap: covers off-plan **and** secondary / rental market (unlike Reelly)  
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│  1.  DELIVERABLES (place all inside a single zip called                    │
+│      `real_estate_ai_docs.zip`)                                            │
+╰─────────────────────────────────────────────────────────────────────────────╯
+A. **Solution-Design Document** (`docs/SDD.pdf`, ≤ 30 pp)  
+   – Logical & deployment diagrams, data-flow, NFR table, risk register.  
+B. **OpenAPI 3 spec** (`api/api.yaml`) and GraphQL schema (`api/schema.graphql`)  
+   – All endpoints incl. `/chat`, `/analytics/valuation/{id}`, web-socket events.  
+C. **ERD** (`db/ERD.png`) + **Data Dictionary** (`db/data_dictionary.xlsx`)  
+   – Tables: users, leads, properties, embeddings (vector 1536), proposals, chat_logs.  
+D. **ADR Set** (`docs/adr/`)  
+   – At least 10 Markdown ADRs (001-010) using “Context ➜ Decision ➜ Consequences”.  
+E. **Sequence & Deployment diagrams** (`diagrams/*.puml` and exported PNGs)  
+   – Chat-to-proposal happy-path; infra topology with EKS nodes & Langfuse pods.  
+F. **Test-Plan** (`qa/test_plan.md`) following IEEE-829 outline with unit/contract/load/security matrices.  
+G. **Operational Run-books** (`ops/runbooks/*.md`) for:  
+   1. Chat latency spike; 2. RDS fail-over; 3. Langfuse disk full.  
+H. **Developer On-boarding Guide** (`docs/onboarding.md`) incl. dev-container setup, seed-data script.  
+I.  **CI/CD & IaC README** (`ops/ci_cd.md`) describing GitHub Actions → ECR → Argo CD pipeline and Terraform modules.  
+J. **Security & Compliance Dossier** (`docs/compliance/PDPL_RERA.md`)  
+   – Data-classification table, encryption map, JWT rotation policy, vendor risk log.  
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│  2.  FORMATTING & QUALITY RULES                                            │
+╰─────────────────────────────────────────────────────────────────────────────╯
+ • Use **MADR** template for ADRs. :contentReference[oaicite:0]{index=0}  
+ • Follow **OpenAPI best-practices** (design-first, source-controlled). :contentReference[oaicite:1]{index=1}  
+ • Show **LangGraph graphs** with branch/loop control. :contentReference[oaicite:2]{index=2}  
+ • Embed **Langfuse** trace examples and retention config. :contentReference[oaicite:3]{index=3}  
+ • Vector storage via **pgvector**; include SQL DDL and HNSW index note. :contentReference[oaicite:4]{index=4}  
+ • Reference **UAE PDPL** residency in security section. :contentReference[oaicite:5]{index=5}  
+ • LLM & NLP components: fastText lang-ID :contentReference[oaicite:6]{index=6}, NLLB-200 translation :contentReference[oaicite:7]{index=7}, Mistral-7B licence. :contentReference[oaicite:8]{index=8}  
+ • External APIs: Bayut Leads API :contentReference[oaicite:9]{index=9} and DLD open-transactions API. :contentReference[oaicite:10]{index=10}  
+ • Test-plan aligns with **IEEE 829** template. :contentReference[oaicite:11]{index=11}  
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│  3.  ACCEPTANCE CRITERIA                                                   │
+╰─────────────────────────────────────────────────────────────────────────────╯
+ ✓ All files compile/render without errors (Swagger-UI, PlantUML, XLSX).  
+ ✓ ADRs reference SDD section numbers.  
+ ✓ Diagram PNGs embedded in SDD + stored separately.  
+ ✓ Test-plan maps > 80 % user stories to test cases.  
+ ✓ On-boarding guide lets new dev run `make dev-up` and hit `/chat` locally in < 30 minutes.  
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│  4.  OUTPUT FORMAT                                                         │
+╰─────────────────────────────────────────────────────────────────────────────╯
+Respond with a **download link to the zip** (`real_estate_ai_docs.zip`) and a short
+HTML/Markdown index listing every file. No further narrative needed.
+
+If additional clarifications are needed, ask concise follow-up questions; otherwise **begin the autonomous task execution immediately**.
